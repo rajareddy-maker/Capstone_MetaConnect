@@ -1,0 +1,189 @@
+version: '3.8'
+
+services:
+  # --------------------------------------------------------------------------
+  # 1. PostgreSQL: Relational Storage for MetaConnect & Airflow
+  # --------------------------------------------------------------------------
+  postgres:
+    image: postgres:16-alpine
+    container_name: metaconnect-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgrespassword
+      POSTGRES_DB: metaconnect
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d metaconnect"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - metaconnect-net
+
+  # --------------------------------------------------------------------------
+  # 2. Liquibase: Database Migrations & Versioning
+  # --------------------------------------------------------------------------
+  liquibase:
+    image: liquibase/liquibase:4.26
+    container_name: metaconnect-liquibase
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command:
+      - --changeLogFile=changelog/db.changelog-master.yaml
+      - --url=jdbc:postgresql://postgres:5432/metaconnect
+      - --username=postgres
+      - --password=postgrespassword
+      - update
+    volumes:
+      - ./db/changelog:/liquibase/changelog
+    networks:
+      - metaconnect-net
+
+  # --------------------------------------------------------------------------
+  # 3. Keycloak: Identity Provider & SSO Authentication
+  # --------------------------------------------------------------------------
+  keycloak:
+    image: quay.io/keycloak/keycloak:24.0.1
+    container_name: metaconnect-keycloak
+    command: start-dev --import-realm
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: adminpassword
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./keycloak/realm-export.json:/opt/keycloak/data/import/realm-export.json:ro
+    networks:
+      - metaconnect-net
+
+  # --------------------------------------------------------------------------
+  # 4. MongoDB Source: Pre-seeded Target Data Source for Metadata Ingestion
+  # --------------------------------------------------------------------------
+  mongodb-source:
+    image: mongo:7.0
+    container_name: metaconnect-mongodb-source
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - metaconnect-net
+
+  # --------------------------------------------------------------------------
+  # 5. Apache Airflow: DB Init & Migration
+  # --------------------------------------------------------------------------
+  airflow-init:
+    build:
+      context: ./airflow
+      dockerfile: Dockerfile
+    container_name: metaconnect-airflow-init
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      AIRFLOW__CORE__SQL_ALCHEMY_CONN: postgresql+psycopg2://postgres:postgrespassword@postgres:5432/metaconnect
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
+    command: >
+      bash -c "airflow db migrate &&
+      airflow users create --username admin --firstname Admin --lastname User --role Admin --email admin@metaconnect.local --password admin"
+    networks:
+      - metaconnect-net
+
+  # --------------------------------------------------------------------------
+  # 6. Apache Airflow: Webserver
+  # --------------------------------------------------------------------------
+  airflow-webserver:
+    build:
+      context: ./airflow
+      dockerfile: Dockerfile
+    container_name: metaconnect-airflow-webserver
+    restart: always
+    command: webserver
+    depends_on:
+      airflow-init:
+        condition: service_completed_successfully
+    environment:
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://postgres:postgrespassword@postgres:5432/metaconnect
+      AIRFLOW__CORE__SQL_ALCHEMY_CONN: postgresql+psycopg2://postgres:postgrespassword@postgres:5432/metaconnect
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
+      AIRFLOW__CORE__HOSTNAME_CALLABLE: airflow.utils.net.get_host_ip_address
+      AIRFLOW__WEBSERVER__SECRET_KEY: metaconnect_airflow_secret_key_443322
+      AIRFLOW__API__AUTH_BACKENDS: airflow.api.auth.backend.basic_auth,airflow.api.auth.backend.session
+    ports:
+      - "8085:8080"
+    volumes:
+      - ./airflow/dags:/opt/airflow/dags
+    networks:
+      - metaconnect-net
+
+  # --------------------------------------------------------------------------
+  # 7. Apache Airflow: Scheduler
+  # --------------------------------------------------------------------------
+  airflow-scheduler:
+    build:
+      context: ./airflow
+      dockerfile: Dockerfile
+    container_name: metaconnect-airflow-scheduler
+    restart: always
+    command: scheduler
+    depends_on:
+      airflow-init:
+        condition: service_completed_successfully
+    environment:
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://postgres:postgrespassword@postgres:5432/metaconnect
+      AIRFLOW__CORE__SQL_ALCHEMY_CONN: postgresql+psycopg2://postgres:postgrespassword@postgres:5432/metaconnect
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
+      AIRFLOW__CORE__HOSTNAME_CALLABLE: airflow.utils.net.get_host_ip_address
+      AIRFLOW__WEBSERVER__SECRET_KEY: metaconnect_airflow_secret_key_443322
+      AIRFLOW__API__AUTH_BACKENDS: airflow.api.auth.backend.basic_auth,airflow.api.auth.backend.session
+      KEYCLOAK_URL: http://keycloak:8080
+      KEYCLOAK_REALM: metaconnect
+      KEYCLOAK_CLIENT_ID: metaconnect-frontend
+      KEYCLOAK_USERNAME: admin
+      KEYCLOAK_PASSWORD: admin123
+    volumes:
+      - ./airflow/dags:/opt/airflow/dags
+    networks:
+      - metaconnect-net
+
+  # --------------------------------------------------------------------------
+  # 8. MetaConnect FastAPI Backend
+  # --------------------------------------------------------------------------
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: metaconnect-backend
+    restart: always
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://postgres:postgrespassword@postgres:5432/metaconnect
+      KEYCLOAK_URL: http://keycloak:8080
+      KEYCLOAK_REALM: metaconnect
+      KEYCLOAK_CLIENT_ID: metaconnect-backend
+      AIRFLOW_BASE_URL: http://airflow-webserver:8080
+      AIRFLOW_USERNAME: admin
+      AIRFLOW_PASSWORD: admin
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend/app:/app/app
+    networks:
+      - metaconnect-net
+
+volumes:
+  postgres_data:
+  mongo_data:
+
+networks:
+  metaconnect-net:
+    driver: bridge

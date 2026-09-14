@@ -1,0 +1,106 @@
+{
+  "id": "metaconnect",
+  "realm": "metaconnect",
+  "displayName": "MetaConnect Metadata Platform",
+  "enabled": true,
+  "sslRequired": "external",
+  "registrationAllowed": false,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "resetPasswordAllowed": true,
+  "editUsernameAllowed": false,
+  "bruteForceProtected": true,
+  "roles": {
+    "realm": [
+      {
+        "name": "admin",
+        "description": "Administrator with full access"
+      },
+      {
+        "name": "analyst",
+        "description": "Data analyst with view and ingestion rights"
+      },
+      {
+        "name": "user",
+        "description": "Standard user with read access"
+      }
+    ]
+  },
+  "groups": [],
+  "defaultRoles": [
+    "user"
+  ],
+  "clients": [
+    {
+      "clientId": "metaconnect-frontend",
+      "name": "MetaConnect Web Frontend",
+      "description": "React single page application",
+      "rootUrl": "http://localhost:5173",
+      "baseUrl": "http://localhost:5173",
+      "enabled": true,
+      "clientAuthenticatorType": "client-secret",
+      "redirectUris": [
+        "http://localhost:5173/*",
+        "http://localhost:3000/*",
+        "http://localhost/*",
+        "http://127.0.0.1:5173/*"
+      ],
+      "webOrigins": [
+        "*"
+      ],
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": true,
+      "publicClient": true,
+      "protocol": "openid-connect"
+    },
+    {
+      "clientId": "metaconnect-backend",
+      "name": "MetaConnect FastAPI Backend",
+      "description": "REST API resource server",
+      "bearerOnly": true,
+      "enabled": true,
+      "protocol": "openid-connect"
+    }
+  ],
+  "users": [
+    {
+      "username": "admin",
+      "enabled": true,
+      "email": "admin@metaconnect.local",
+      "firstName": "Admin",
+      "lastName": "User",
+      "emailVerified": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "admin123",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "admin",
+        "user"
+      ]
+    },
+    {
+      "username": "demo",
+      "enabled": true,
+      "email": "demo@metaconnect.local",
+      "firstName": "Demo",
+      "lastName": "Analyst",
+      "emailVerified": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "demo123",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "analyst",
+        "user"
+      ]
+    }
+  ]
+}

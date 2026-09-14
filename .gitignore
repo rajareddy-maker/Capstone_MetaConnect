@@ -1,0 +1,19 @@
+# Environment variables
+.env
+
+# Python cache and build files
+.pytest_cache
+__pycache__
+*.py[cod]
+
+# Virtual environment
+.venv
+
+# Node.js dependencies
+node_modules
+
+# IDE files
+.idea
+.vscode
+*.swp
+

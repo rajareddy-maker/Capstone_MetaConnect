@@ -1,0 +1,152 @@
+{
+  "info": {
+    "_postman_id": "8f5b3f42-77d1-4f8c-9f0a-6e4f80b53e31",
+    "name": "MetaConnect API",
+    "description": "Postman collection for the MetaConnect FastAPI and Keycloak services.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "api_url", "value": "http://localhost:8000" },
+    { "key": "keycloak_url", "value": "http://localhost:8080" },
+    { "key": "realm", "value": "metaconnect" },
+    { "key": "client_id", "value": "metaconnect-frontend" },
+    { "key": "username", "value": "admin" },
+    { "key": "password", "value": "admin123" },
+    { "key": "access_token", "value": "" },
+    { "key": "connection_id", "value": "replace-with-connection-uuid" },
+    { "key": "run_id", "value": "replace-with-run-uuid" },
+    { "key": "database_id", "value": "replace-with-database-uuid" },
+    { "key": "schema_id", "value": "replace-with-schema-uuid" },
+    { "key": "table_id", "value": "replace-with-table-uuid" }
+  ],
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Get access token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Token request succeeded', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "const json = pm.response.json();",
+                  "pm.collectionVariables.set('access_token', json.access_token);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/x-www-form-urlencoded" }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                { "key": "client_id", "value": "{{client_id}}", "type": "text" },
+                { "key": "username", "value": "{{username}}", "type": "text" },
+                { "key": "password", "value": "{{password}}", "type": "text" },
+                { "key": "grant_type", "value": "password", "type": "text" }
+              ]
+            },
+            "url": {
+              "raw": "{{keycloak_url}}/realms/{{realm}}/protocol/openid-connect/token",
+              "host": ["{{keycloak_url}}"],
+              "path": ["realms", "{{realm}}", "protocol", "openid-connect", "token"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Health and public endpoints",
+      "item": [
+        {
+          "name": "Root status",
+          "request": { "method": "GET", "url": "{{api_url}}/" }
+        },
+        {
+          "name": "Health check",
+          "request": { "method": "GET", "url": "{{api_url}}/health" }
+        },
+        {
+          "name": "Connector templates",
+          "request": { "method": "GET", "url": "{{api_url}}/api/v1/connections/templates/connectors" }
+        }
+      ]
+    },
+    {
+      "name": "Connections",
+      "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{access_token}}", "type": "string" }] },
+      "item": [
+        {
+          "name": "List connections",
+          "request": { "method": "GET", "url": "{{api_url}}/api/v1/connections" }
+        },
+        {
+          "name": "Create MongoDB Atlas connection",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Interview Management MongoDB\",\n  \"description\": \"MongoDB Atlas source\",\n  \"connector_type\": \"mongodb\",\n  \"host\": \"cluster0.lomhm5f.mongodb.net\",\n  \"port\": null,\n  \"database_name\": \"Interview_Management_Portal\",\n  \"username\": \"rajareddy_db_user\",\n  \"password\": \"replace-with-rotated-password\",\n  \"extra_params\": {\n    \"connection_uri\": \"mongodb+srv://replace-user:replace-password@cluster0.lomhm5f.mongodb.net/?appName=Cluster0\"\n  }\n}"
+            },
+            "url": "{{api_url}}/api/v1/connections"
+          }
+        },
+        {
+          "name": "Test connection parameters",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"connector_type\": \"mongodb\",\n  \"database_name\": \"Interview_Management_Portal\",\n  \"extra_params\": {\n    \"connection_uri\": \"mongodb+srv://replace-user:replace-password@cluster0.lomhm5f.mongodb.net/?appName=Cluster0\"\n  }\n}"
+            },
+            "url": "{{api_url}}/api/v1/connections/test"
+          }
+        },
+        {
+          "name": "Get connection",
+          "request": { "method": "GET", "url": "{{api_url}}/api/v1/connections/{{connection_id}}" }
+        },
+        {
+          "name": "Test saved connection",
+          "request": { "method": "POST", "url": "{{api_url}}/api/v1/connections/{{connection_id}}/test" }
+        },
+        {
+          "name": "Trigger metadata ingestion",
+          "request": { "method": "POST", "url": "{{api_url}}/api/v1/connections/{{connection_id}}/ingest" }
+        }
+      ]
+    },
+    {
+      "name": "Metadata",
+      "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{access_token}}", "type": "string" }] },
+      "item": [
+        { "name": "Metadata tree", "request": { "method": "GET", "url": "{{api_url}}/api/v1/metadata/tree/{{connection_id}}" } },
+        { "name": "List databases", "request": { "method": "GET", "url": "{{api_url}}/api/v1/metadata/databases?connection_id={{connection_id}}" } },
+        { "name": "List schemas", "request": { "method": "GET", "url": "{{api_url}}/api/v1/metadata/schemas?database_id={{database_id}}" } },
+        { "name": "List tables", "request": { "method": "GET", "url": "{{api_url}}/api/v1/metadata/tables?schema_id={{schema_id}}" } },
+        { "name": "List columns", "request": { "method": "GET", "url": "{{api_url}}/api/v1/metadata/columns?table_id={{table_id}}" } }
+      ]
+    },
+    {
+      "name": "Search and statistics",
+      "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{access_token}}", "type": "string" }] },
+      "item": [
+        { "name": "Search catalog", "request": { "method": "GET", "url": "{{api_url}}/api/v1/search?q=customer&limit=50" } },
+        { "name": "Dashboard statistics", "request": { "method": "GET", "url": "{{api_url}}/api/v1/stats/dashboard" } },
+        { "name": "Recent ingestion runs", "request": { "method": "GET", "url": "{{api_url}}/api/v1/ingestion/runs?limit=20" } },
+        { "name": "Ingestion run status", "request": { "method": "GET", "url": "{{api_url}}/api/v1/ingestion/{{run_id}}" } },
+        { "name": "Connection ingestion history", "request": { "method": "GET", "url": "{{api_url}}/api/v1/ingestion/connection/{{connection_id}}/history" } }
+      ]
+    }
+  ]
+}
