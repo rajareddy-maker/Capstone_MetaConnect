@@ -1,9 +1,3 @@
-"""
-Apache Airflow DAG: Metadata Ingestion Pipeline
-Extracts metadata hierarchy from configured data sources (MongoDB, etc.)
-and synchronizes it with the MetaConnect catalog.
-"""
-
 from datetime import datetime, timedelta
 import logging
 import requests
