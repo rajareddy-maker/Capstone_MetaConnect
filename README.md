@@ -185,7 +185,6 @@ DATABASE_URL=postgresql://postgres:<password>@localhost:5432/metaconnect
 ENCRYPTION_KEY=<fernet-key>
 KEYCLOAK_URL=http://localhost:8080
 KEYCLOAK_REALM=metaconnect
-KEYCLOAK_CLIENT_ID=metaconnect-backend
 AIRFLOW_BASE_URL=http://localhost:8085
 AIRFLOW_USERNAME=<airflow-user>
 AIRFLOW_PASSWORD=<airflow-password>
@@ -199,7 +198,6 @@ AIRFLOW_PASSWORD=<airflow-password>
 | `ENCRYPTION_KEY` | Fernet key for saved connection passwords | No in code, required for secure deployment | Development fallback exists; replace it |
 | `KEYCLOAK_URL` | Keycloak base URL | No | `http://localhost:8080`; Compose uses `http://keycloak:8080` |
 | `KEYCLOAK_REALM` | Keycloak realm | No | `metaconnect` |
-| `KEYCLOAK_CLIENT_ID` | Backend Keycloak client ID | No | `metaconnect-backend` |
 | `AIRFLOW_BASE_URL` | Airflow webserver URL | No | `http://localhost:8085`; Compose uses `http://airflow-webserver:8080` |
 | `AIRFLOW_USERNAME` | Airflow API username | No | `admin` |
 | `AIRFLOW_PASSWORD` | Airflow API password | No | `admin` |
@@ -334,7 +332,7 @@ Tokens are kept in the Keycloak client instance rather than application `localSt
 
 ### Backend validation
 
-The backend retrieves Keycloak's realm JWKS endpoint, finds the JWT signing key by `kid`, and validates the RS256 signature. It extracts the subject, preferred username/email, and returns them as the current user dependency. Credential strings saved for data sources are encrypted with Fernet before database persistence.
+The backend retrieves Keycloak's realm JWKS endpoint, finds the JWT signing key by `kid`, and validates the RS256 signature. It extracts the subject, preferred username/email, and returns them as the current user dependency. Credential strings saved for data sources are encrypted with Fernet before database persistence. The backend does not use a separate Keycloak client ID; it validates signed bearer tokens issued by the realm.
 
 The backend currently reads roles from tokens for user display, but route handlers do not enforce separate admin/analyst/user permissions. JWT audience validation is disabled in `security.py`; this should be reviewed before production use.
 

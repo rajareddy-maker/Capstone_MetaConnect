@@ -27,9 +27,6 @@ class Settings(BaseSettings):
     KEYCLOAK_REALM: str = Field(
         default="metaconnect", validation_alias="KEYCLOAK_REALM"
     )
-    KEYCLOAK_CLIENT_ID: str = Field(
-        default="metaconnect-backend", validation_alias="KEYCLOAK_CLIENT_ID"
-    )
     # Airflow Integration Settings
     AIRFLOW_BASE_URL: str = Field(
         default="http://localhost:8085", validation_alias="AIRFLOW_BASE_URL"

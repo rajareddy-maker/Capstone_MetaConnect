@@ -164,7 +164,6 @@ services:
       DATABASE_URL: postgresql://postgres:postgrespassword@postgres:5432/metaconnect
       KEYCLOAK_URL: http://keycloak:8080
       KEYCLOAK_REALM: metaconnect
-      KEYCLOAK_CLIENT_ID: metaconnect-backend
       AIRFLOW_BASE_URL: http://airflow-webserver:8080
       AIRFLOW_USERNAME: admin
       AIRFLOW_PASSWORD: admin

@@ -53,14 +53,6 @@
       "directAccessGrantsEnabled": true,
       "publicClient": true,
       "protocol": "openid-connect"
-    },
-    {
-      "clientId": "metaconnect-backend",
-      "name": "MetaConnect FastAPI Backend",
-      "description": "REST API resource server",
-      "bearerOnly": true,
-      "enabled": true,
-      "protocol": "openid-connect"
     }
   ],
   "users": [
