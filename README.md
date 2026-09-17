@@ -449,19 +449,8 @@ npm run preview
 For local frontend development, ensure the Vite proxy in `frontend/vite.config.js` and the Keycloak redirect URIs match the URL being used.
 
 
-## Future Enhancements
 
-Possible improvements, separate from the functionality currently implemented:
 
-- Add dedicated automated unit and integration tests for API, connectors, authentication, and ingestion.
-- Add a dedicated Airflow service credential or private network policy for internal execution endpoints.
-- Enable JWT audience and issuer validation and enforce role-based authorization.
-- Add connector implementations beyond MongoDB.
-- Add pagination and relevance ordering to global search.
-- Add refresh-token handling through Keycloak's `updateToken` flow before API requests.
-- Add structured frontend error states and retry controls for failed API calls.
-- Add CI checks, container health checks for all services, and production secret management.
-- Add maintained screenshots and a demonstration dataset.
 
 
 
