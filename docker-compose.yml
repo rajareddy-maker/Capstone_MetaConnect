@@ -143,11 +143,6 @@ services:
       AIRFLOW__CORE__HOSTNAME_CALLABLE: airflow.utils.net.get_host_ip_address
       AIRFLOW__WEBSERVER__SECRET_KEY: metaconnect_airflow_secret_key_443322
       AIRFLOW__API__AUTH_BACKENDS: airflow.api.auth.backend.basic_auth,airflow.api.auth.backend.session
-      KEYCLOAK_URL: http://keycloak:8080
-      KEYCLOAK_REALM: metaconnect
-      KEYCLOAK_CLIENT_ID: metaconnect-frontend
-      KEYCLOAK_USERNAME: admin
-      KEYCLOAK_PASSWORD: admin123
     volumes:
       - ./airflow/dags:/opt/airflow/dags
     networks:
@@ -177,6 +172,22 @@ services:
       - "8000:8000"
     volumes:
       - ./backend/app:/app/app
+    networks:
+      - metaconnect-net
+
+  # --------------------------------------------------------------------------
+  # 9. MetaConnect React Frontend
+  # --------------------------------------------------------------------------
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: metaconnect-frontend
+    restart: always
+    depends_on:
+      - backend
+    ports:
+      - "5173:80"
     networks:
       - metaconnect-net
 

@@ -101,7 +101,7 @@ class ConnectionService:
             username=payload.username,
             password_encrypted=encrypted_pwd,
             extra_params=payload.extra_params,
-            status="UNTESTED",
+            status="CONNECTED",
             created_by=username,
         )
 

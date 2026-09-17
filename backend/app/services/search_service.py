@@ -37,11 +37,7 @@ class SearchService:
         if not entity_filter or entity_filter.lower() == "connection":
             conns = (
                 db.query(Connection)
-                .filter(
-                    (Connection.name.ilike(clean_q))
-                    | (Connection.description.ilike(clean_q))
-                    | (Connection.connector_type.ilike(clean_q))
-                )
+                .filter(Connection.name.ilike(clean_q))
                 .limit(limit)
                 .all()
             )
@@ -63,10 +59,7 @@ class SearchService:
         if not entity_filter or entity_filter.lower() == "database":
             dbs = (
                 db.query(MetadataDatabase)
-                .filter(
-                    (MetadataDatabase.name.ilike(clean_q))
-                    | (MetadataDatabase.description.ilike(clean_q))
-                )
+                .filter(MetadataDatabase.name.ilike(clean_q))
                 .limit(limit)
                 .all()
             )
@@ -90,10 +83,7 @@ class SearchService:
         if not entity_filter or entity_filter.lower() == "schema":
             schs = (
                 db.query(MetadataSchema)
-                .filter(
-                    (MetadataSchema.name.ilike(clean_q))
-                    | (MetadataSchema.description.ilike(clean_q))
-                )
+                .filter(MetadataSchema.name.ilike(clean_q))
                 .limit(limit)
                 .all()
             )
@@ -125,10 +115,7 @@ class SearchService:
         if not entity_filter or entity_filter.lower() == "table":
             tbls = (
                 db.query(MetadataTable)
-                .filter(
-                    (MetadataTable.name.ilike(clean_q))
-                    | (MetadataTable.description.ilike(clean_q))
-                )
+                .filter(MetadataTable.name.ilike(clean_q))
                 .limit(limit)
                 .all()
             )
@@ -171,11 +158,7 @@ class SearchService:
         if not entity_filter or entity_filter.lower() == "column":
             cols = (
                 db.query(MetadataColumn)
-                .filter(
-                    (MetadataColumn.name.ilike(clean_q))
-                    | (MetadataColumn.data_type.ilike(clean_q))
-                    | (MetadataColumn.description.ilike(clean_q))
-                )
+                .filter(MetadataColumn.name.ilike(clean_q))
                 .limit(limit)
                 .all()
             )

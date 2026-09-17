@@ -14,7 +14,6 @@ router = APIRouter(prefix="/ingestion", tags=["Ingestion"])
 def execute_ingestion(
     payload: IngestionExecuteRequest,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user),
 ):
     """Execute connector extraction and persist metadata for an Airflow run."""
     return AirflowService.execute_ingestion(db, payload.connection_id, payload.run_id)

@@ -98,7 +98,6 @@ def test_connection_params(
 def test_saved_connection(
     connection_id: uuid.UUID,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user),
 ):
     """Test an existing saved connection and update its health status."""
     return ConnectionService.test_saved_connection(db, connection_id)
